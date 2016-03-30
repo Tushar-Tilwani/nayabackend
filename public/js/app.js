@@ -1,0 +1,1 @@
+angular.module('NAYA', ['ngRoute', 'appRoutes', 'FormCtrl','HomeCtrl','ChatCtrl']);
