@@ -1,60 +1,64 @@
-/*// modules =================================================
-var express        = require('express');
-var app            = express();
-var mongoose       = require('mongoose');
-var bodyParser     = require('body-parser');
-var methodOverride = require('method-override');
 
-// configuration ===========================================
-	
-// config files
-var db = require('./config/db');
 
-var port = process.env.PORT || 8080; // set our port
-// mongoose.connect(db.url); // connect to our mongoDB database (commented out after you enter in your own credentials)
+var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 
-// get all data/stuff of the body (POST) parameters
-app.use(bodyParser.json()); // parse application/json 
-app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json
-app.use(bodyParser.urlencoded({ extended: true })); // parse application/x-www-form-urlencoded
 
-app.use(methodOverride('X-HTTP-Method-Override')); // override with the X-HTTP-Method-Override header in the request. simulate DELETE/PUT
 app.use(express.static(__dirname + '/public')); // set the static files location /public/img will be /img for users
 
 // routes ==================================================
 require('./app/routes')(app); // pass our application into our routes
 
-// start app ===============================================
-app.listen(port);	
-console.log('Magic happens on port ' + port); 			// shoutout to the user
-exports = module.exports = app; 						// expose app
-*/
 
- var express = require('express');
-  var app = express();
-  var http = require('http').Server(app);
+/*---- Socket ----*/
 
-  // Retrieve
-/*var MongoClient = require('mongodb').MongoClient;
+// rooms which are currently available in chat
+var rooms = ['room1','room2','room3'];
+var usernames = {};
 
-// Connect to the db
-MongoClient.connect("mongodb://localhost:27017/test", function(err, db) {
-  if(!err) {
-    console.log("We are connected");
-  }
-});*/
-
-
-  /*app.get('/', function(req, res){
-    res.sendfile('index.html');
-    console.log("ddd");
-    //res.write('dddd');
-  });*/
-app.use(express.static(__dirname + '/public')); // set the static files location /public/img will be /img for users
-
-// routes ==================================================
-require('./app/routes')(app); // pass our application into our routes
-
-  http.listen(process.env.PORT || 3000, function(){
-    console.log('listening on *:3000');
+io.sockets.on('connection', function (socket) {
+  
+  // when the client emits 'adduser', this listens and executes
+  socket.on('adduser', function(username){
+    // store the username in the socket session for this client
+    socket.username = username;
+    // store the room name in the socket session for this client
+    socket.room = 'room1';
+    // add the client's username to the global list
+    usernames[username] = username;
+    // send client to room 1
+    socket.join('room1');
+    // echo to client they've connected
+    socket.emit('updatechat', 'SERVER', 'you have connected to room1');
+    // echo to room 1 that a person has connected to their room
+    socket.broadcast.to('room1').emit('updatechat', 'SERVER', username + ' has connected to this room');
   });
+  
+  // when the client emits 'sendchat', this listens and executes
+  socket.on('sendchat', function (data) {
+    // we tell the client to execute 'updatechat' with 2 parameters
+    io.sockets.in(socket.room).emit('updatechat', socket.username, data);
+  });
+  
+
+  // when the user disconnects.. perform this
+  socket.on('disconnect', function(){
+    // remove the username from global usernames list
+    delete usernames[socket.username];
+    // update list of users in chat, client-side
+    io.sockets.emit('updateusers', usernames);
+    // echo globally that this client has left
+    socket.broadcast.emit('updatechat', 'SERVER', socket.username + ' has disconnected');
+    socket.leave(socket.room);
+  });
+});
+
+
+/*---- Socket ----*/
+
+
+http.listen(process.env.PORT || 3000, function(){
+  console.log('listening on *:3000');
+});
