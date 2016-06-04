@@ -11,7 +11,9 @@ angular.module('ChatCtrl', []).controller('ChatController', function($scope) {
 
     // listener, whenever the server emits 'updatechat', this updates the chat body
     socket.on('updatechat', function (username, data) {
-        $('#chat_messages').append('<li class="list-group-item"><b>'+username + ':</b> ' + data + '</li>');
+        $('#ul-chat-messages').append('<li class="list-group-item"><b>'+username + ':</b> ' + data + '</li>');
+        var objDiv = document.getElementById("ul-chat-messages");
+objDiv.scrollTop = objDiv.scrollHeight;
     });
 
     // when the client clicks SEND
