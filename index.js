@@ -4,6 +4,7 @@ path = require('path'),
 MongoClient = require('mongodb').MongoClient,
 Server = require('mongodb').Server,
 CollectionDriver = require('./collectionDriver').CollectionDriver;
+var _ = require('lodash');
 
 var app = express();
 var bodyParser = require('body-parser')
@@ -80,14 +81,16 @@ app.get('/projects/user/token/:token', function(req, res) { //I
  var token = params.token;
  var callback = function(error,doc) {
    if (error) { res.send(400, error); }
-   if(!doc) { res.send(400, {error: 'Token Invalid'}); }
+   else if(_.isEmpty(doc)) { res.send(400, {error: 'Token Invalid'}); }
+   else {
 
-   var collection = "projects";
+     var collection = "projects";
 
   collectionDriver.findByUser(collection, doc._id, function(error, objs) { //J
     if (error) { res.send(400, error); }
           else { res.send(200, objs); } //K
         });
+}
 }
 
 collectionDriver.getUserFromToken(token, callback);
@@ -128,6 +131,17 @@ app.get('/tasks/employee/id/:id', function(req, res) {
   var params = req.params;
   var employeeId = params.id;
   collectionDriver.getTasksByEmployee(employeeId, function(err,docs) {
+    if (err) { res.send(400, err); } 
+          else { res.send(201, docs); } //B
+        });
+});
+
+app.get('/task/:taskId/status/:isDone', function(req, res) { 
+  var params = req.params;
+  var taskId = params.taskId;
+  var isDone = params.isDone;
+
+  collectionDriver.setTaskStatus(taskId,isDone,function(err,docs) {
     if (err) { res.send(400, err); } 
           else { res.send(201, docs); } //B
         });
@@ -357,6 +371,30 @@ app.post('/projects/:projectId/addTask', function(req, res) {
         });
 });
 
+
+
+app.get('/chats/project/:projectId/limit/:limit/skip/:skip', function(req, res) { //I
+ var params = req.params;
+ var projectId = params.projectId;
+ var limit = params.limit;
+ var skip = params.skip;
+
+ 
+       collectionDriver.getChats(projectId,limit,skip,function(error, objs) { //J
+        if (error) { res.send(400, error); }
+          else { res.send(200, objs); } //K
+        });
+     });
+
+app.post('/:collection', function(req, res) { //A
+  var object = req.body;
+  var collection = req.params.collection;
+  console.log(collection);
+  collectionDriver.save(collection, object, function(err,docs) {
+    if (err) { res.send(400, err); } 
+          else { res.send(201, docs); } //B
+        });
+});
 
 app.get('/:collection/:entity', function(req, res) { //I
  var params = req.params;

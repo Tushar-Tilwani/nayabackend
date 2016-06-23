@@ -117,9 +117,27 @@ db.projects.aggregate([
 },{
 	$project: {
 		tasks: 1,
-		_id: 0,
-		tasks.manager.$.password:0
+		_id: 0
 	}
 }]).pretty()
 
+
+
+
+
+db.projects.update(
+   {},
+   {$set:{"tasks":[]}},
+   {
+     upsert: true,
+     multi: true
+   }
+)
+
+db.projects.find({tasks: {$elemMatch: {_id: ObjectId("576b1d758862411e3b2751e5")}}})
+
+db.projects.find({tasks: {$elemMatch: {id: "576b1d758862411e3b2751e5"}}})
+
+
+db.projects.update({tasks: {$elemMatch: {_id: ObjectId("576b1d758862411e3b2751e5")}}},{$set:  {"tasks.$.isDone": true}},{upsert:true})
 

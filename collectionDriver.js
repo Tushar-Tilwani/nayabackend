@@ -69,6 +69,20 @@
   }
 
 
+  CollectionDriver.prototype.setTaskStatus = function(entityId, isDone, callback) {
+    this.getCollection("projects", function(error, the_collection) {
+      if (error) callback(error)
+        else {
+            the_collection.update({tasks: {$elemMatch: {_id: ObjectID(entityId)}}},{$set:  {"tasks.$.isDone": (isDone==='true') }},{upsert:true}, 
+            function(error,doc) { //C
+              if (error) callback(error)
+               else callback(null, isDone);
+           });
+          }
+        });
+  }
+
+
   //delete a specific object
   CollectionDriver.prototype.delete = function(collectionName, entityId, callback) {
       this.getCollection(collectionName, function(error, the_collection) { //A
@@ -182,7 +196,7 @@
           toUpdate["$pull"][arrayName] = {
             _id: ObjectID(childId)
           };
-          
+
           console.log(selection);
           console.log(toUpdate);
 
@@ -224,13 +238,13 @@
     var employeeQ = {
       "tasks":{
         $elemMatch: {
-          "_id": ObjectID(userId)
+          "manager_id": ObjectID(userId)
         }
       }
     };
     selection["$or"] = [managerQ,employeeQ];
 
-    var projection = {};
+    var projection = {tasks:0};
 
     return this.genericGet(collectionName, selection, projection, callback)
   }
@@ -304,6 +318,29 @@ CollectionDriver.prototype.getUserFromToken = function(token, callback) {
         });
 }
 
+
+ CollectionDriver.prototype.getChats = function(projectId,limit,skip,callback) { //A
+
+  var selection = {
+    room: projectId
+  }
+  var projection = {
+
+  };
+  
+  //db.chats.find().sort({created_at:-1}).skip(2).limit(2)
+    this.getCollection("chats", function(error, the_collection) {
+      if (error) callback(error)
+        else {
+          console.log(selection);
+             the_collection.find(selection,projection).sort({created_at:-1}).skip(parseInt(skip)).limit(parseInt(limit))
+             .toArray(function(error, results) { //B
+              if( error ) callback(error)
+                else callback(null, results)
+              });
+           }
+         });
+  }
 
 
 CollectionDriver.prototype.getTasksByEmployee = function(employeeId, callback) {
