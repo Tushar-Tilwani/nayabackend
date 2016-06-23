@@ -15,6 +15,8 @@ Install node js on your pc
 
 Download the code as zip and expand.
 
+Navigate to the folder
+
 Run "npm install"
 
 Run "node index.js"
