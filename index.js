@@ -25,23 +25,6 @@ app.use(function(req, res, next) {
   next();
 });
 
-
-/*var mongoHost = 'localHost'; //A
-var mongoPort = 27017; 
-var collectionDriver;
-
-var mongoClient = new MongoClient(new Server(mongoHost, mongoPort)); //B
-mongoClient.open(function(err, mongoClient) { //C
-  if (!mongoClient) {
-    console.error("Error! Exiting... Must start MongoDB first");
-      process.exit(1); //D
-    }
-  var db = mongoClient.db("nayaDb");  //E
-  collectionDriver = new CollectionDriver(db); //F
-});*/
-
-
-
 // Initialize connection once
 MongoClient.connect("mongodb://localhost:27017/nayaDb", function(err, database) {
   if(err) throw err;
