@@ -3,7 +3,7 @@
 
 # restore database
 
-mongorestore -d nayaDb "path.to.folder/database"
+mongorestore -d nayaDb "path.to.folder/database/nayaDb"
 
 http://stackoverflow.com/questions/11255630/how-to-export-all-collection-in-mongodb
 
